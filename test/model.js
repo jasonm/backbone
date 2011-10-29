@@ -383,6 +383,47 @@ $(document).ready(function() {
     var emptyattrs = new Defaulted();
   });
 
+  test("Model: validate receives full attributes of new model state", function() {
+    var model = new Backbone.Model();
+    model.validate = function(attrs) {
+      var errors = [];
+      _.each(attrs, function(attr) {
+        if (attr == 100) {
+          errors.push(attr + " can't be 100");
+        }
+      });
+      if (!_.isEmpty(errors)) return errors;
+    };
+
+    model.set({a: 100}, {silent: false});
+    model.set({b: 100});
+
+    var result = model.validate();
+
+    equals(result.sort(), ["a can't be 100", "b can't be 100"]);
+  });
+
+  test("Model: validate has access to new and old properties via get() and previous()", function() {
+    var model = new Backbone.Model();
+    model.validate = function(attrs) {
+      var oldVolume = this.previous('volume');
+      var newVolume = this.get('volume');
+
+      if (oldVolume && newVolume && newVolume < oldVolume) {
+        return "Turning it down? If it's too loud, you're too old!";
+      }
+    };
+
+    model.set({volume: 10});
+    equals(model.validate(), undefined);
+
+    model.set({volume: 11});
+    equals(model.validate(), undefined);
+
+    model.set({volume: 4});
+    equals(model.validate(), "Turning it down? If it's too loud, you're too old!")
+  });
+
   test("Model: Inherit class properties", function() {
     var Parent = Backbone.Model.extend({
       instancePropSame: function() {},
