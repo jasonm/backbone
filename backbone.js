@@ -194,9 +194,6 @@
       if (attrs.attributes) attrs = attrs.attributes;
       var now = this.attributes, escaped = this._escapedAttributes;
 
-      // Run validation.
-      if (!options.silent && this.validate && !this._performValidation(attrs, options)) return false;
-
       // Check for changes of `id`.
       if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
 
@@ -213,6 +210,12 @@
           this._changed = true;
           if (!options.silent) this.trigger('change:' + attr, this, val, options);
         }
+      }
+
+      // Run validation.
+      if (!options.silent && this.validate && !this._performValidation(attrs, options)) {
+        // TODO: Rollback
+        return false;
       }
 
       // Fire the `"change"` event, if the model has been changed.
